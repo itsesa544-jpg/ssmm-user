@@ -1,7 +1,9 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CATEGORIES, SERVICES } from '../constants';
-import { Service } from '../types';
+import { Service, Order } from '../types';
 import { ChevronDownIcon } from './IconComponents';
+import { auth, database } from '../firebase';
+import { ref, set, push, runTransaction, get } from 'firebase/database';
 
 const NewOrderForm: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]?.name || '');
@@ -10,6 +12,9 @@ const NewOrderForm: React.FC = () => {
   const [link, setLink] = useState('');
   const [quantity, setQuantity] = useState(0);
   const [charge, setCharge] = useState(0.00);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     const filteredServices = SERVICES.filter(s => s.category === selectedCategory);
@@ -27,7 +32,6 @@ const NewOrderForm: React.FC = () => {
         setCharge(newCharge);
     }
   }, [selectedService]);
-
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(e.target.value);
@@ -47,22 +51,85 @@ const NewOrderForm: React.FC = () => {
     }
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!selectedService || !link || !quantity) {
-          alert('Please fill all the required fields.');
-          return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!selectedService || !link || !quantity) {
+      setError('Please fill all the required fields.');
+      return;
+    }
+    if (quantity < selectedService.min || quantity > selectedService.max) {
+      setError(`Quantity must be between ${selectedService.min} and ${selectedService.max}.`);
+      return;
+    }
+
+    const user = auth.currentUser;
+    if (!user) {
+      setError('You must be logged in to place an order.');
+      return;
+    }
+    
+    setSubmitting(true);
+
+    const userRef = ref(database, `users/${user.uid}`);
+    
+    try {
+      const snapshot = await get(userRef);
+      if (!snapshot.exists() || snapshot.val().balance < charge) {
+        setError('Your balance is too low to place this order.');
+        setSubmitting(false);
+        return;
       }
-      if (quantity < selectedService.min || quantity > selectedService.max) {
-          alert(`Quantity must be between ${selectedService.min} and ${selectedService.max}.`);
-          return;
+
+      const { committed, snapshot: finalSnapshot } = await runTransaction(userRef, (userData) => {
+        if (userData) {
+          if (userData.balance >= charge) {
+            userData.balance -= charge;
+          } else {
+            return; // Abort transaction
+          }
+        }
+        return userData;
+      });
+
+      if (!committed) {
+        throw new Error('Failed to update balance. Please try again.');
       }
-      alert(`Order placed successfully!\nService: ${selectedService.name}\nLink: ${link}\nQuantity: ${quantity}\nCharge: ৳${charge.toFixed(4)}`);
+
+      const ordersRef = ref(database, 'orders');
+      const newOrderRef = push(ordersRef);
+      const newOrder: Omit<Order, 'id'> = {
+        uid: user.uid,
+        serviceId: selectedService.id,
+        serviceName: selectedService.name,
+        link,
+        quantity,
+        charge,
+        createdAt: new Date().toISOString(),
+        status: 'Pending',
+      };
+      await set(newOrderRef, newOrder);
+
+      setSuccess(`Order placed successfully! Charge: ৳${charge.toFixed(4)}`);
+      // Reset form
+      setSelectedCategory(CATEGORIES[0]?.name || '');
+      setLink('');
+
+    } catch (err: any) {
+      console.error("Order submission failed: ", err);
+      setError('Failed to place order. Please try again or check your balance.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">New Order</h2>
+      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">{error}</div>}
+      {success && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">{success}</div>}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">Category</label>
@@ -122,8 +189,8 @@ const NewOrderForm: React.FC = () => {
         </div>
 
         <div>
-          <button type="submit" className="w-full px-5 py-3 text-base font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 transition-transform transform hover:scale-105">
-            Submit Order
+          <button type="submit" disabled={submitting} className="w-full px-5 py-3 text-base font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 transition-transform transform hover:scale-105 disabled:bg-green-400 disabled:cursor-not-allowed">
+            {submitting ? 'Submitting...' : 'Submit Order'}
           </button>
         </div>
       </form>

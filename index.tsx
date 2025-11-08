@@ -10,6 +10,7 @@ const AppContainer: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoginView, setIsLoginView] = useState(true);
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -35,9 +36,21 @@ const AppContainer: React.FC = () => {
 
   if (!user) {
     if (isLoginView) {
-      return <LoginPage onSwitchToSignup={() => setIsLoginView(false)} />;
+      return (
+        <LoginPage 
+            onSwitchToSignup={() => {
+                setSignupSuccess(false);
+                setIsLoginView(false);
+            }} 
+            signupSuccess={signupSuccess}
+            clearSignupSuccess={() => setSignupSuccess(false)}
+        />
+      );
     }
-    return <SignupPage onSwitchToLogin={() => setIsLoginView(true)} />;
+    return <SignupPage onSwitchToLogin={() => {
+        setSignupSuccess(true);
+        setIsLoginView(true);
+    }} />;
   }
 
   return <App onLogout={handleLogout} />;

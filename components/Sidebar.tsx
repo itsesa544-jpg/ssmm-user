@@ -141,6 +141,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, activePage, setAct
                 </button>
                 {isAdminOpen && (
                   <div id="admin-submenu" className="pl-6 mt-1 space-y-1">
+                    <SubNavLink icon={<AddFundsIcon className="w-5 h-5"/>} text="Fund Requests" onClick={() => handleNavigation('Admin: Fund Requests')} active={activePage === 'Admin: Fund Requests'} />
                     <SubNavLink icon={<HistoryIcon className="w-5 h-5"/>} text="Login History" onClick={() => handleNavigation('Admin: Login History')} active={activePage === 'Admin: Login History'} />
                     <SubNavLink icon={<UserIcon className="w-5 h-5"/>} text="All Users" onClick={() => handleNavigation('Admin: All Users')} active={activePage === 'Admin: All Users'} />
                   </div>

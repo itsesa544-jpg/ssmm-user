@@ -1,5 +1,7 @@
-import React from 'react';
-import { Payment, PaymentStatus } from '../types';
+import React, { useState, useEffect } from 'react';
+import { FundRequest, PaymentStatus } from '../types';
+import { auth, database } from '../firebase';
+import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
 
 const statusColors: Record<PaymentStatus, string> = {
   Completed: 'bg-green-100 text-green-800',
@@ -13,11 +15,51 @@ const StatusBadge: React.FC<{ status: PaymentStatus }> = ({ status }) => (
   </span>
 );
 
-interface PaymentHistoryProps {
-  history: Payment[];
-}
+const PaymentHistory: React.FC = () => {
+  const [history, setHistory] = useState<FundRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
-const PaymentHistory: React.FC<PaymentHistoryProps> = ({ history }) => {
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    const fundRequestsRef = query(
+      ref(database, 'fundRequests'),
+      orderByChild('uid'),
+      equalTo(user.uid)
+    );
+
+    const unsubscribe = onValue(fundRequestsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const historyList: FundRequest[] = Object.keys(data).map(key => ({
+          id: key,
+          ...data[key]
+        })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setHistory(historyList);
+      } else {
+        setHistory([]);
+      }
+      setLoading(false);
+    }, (error) => {
+        console.error(error);
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-10">
+        <div className="text-xl font-semibold text-gray-700 animate-pulse">Loading Payment History...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Payment History</h2>
@@ -37,9 +79,9 @@ const PaymentHistory: React.FC<PaymentHistoryProps> = ({ history }) => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {history.length > 0 ? (
-                  history.map((payment: Payment) => (
+                  history.map((payment: FundRequest) => (
                     <tr key={payment.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{payment.date}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(payment.date).toLocaleString()}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">
                         {payment.currency === 'BDT' ? '৳' : '$'}{payment.amount.toFixed(2)}
                       </td>

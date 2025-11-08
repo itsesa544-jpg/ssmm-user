@@ -16,15 +16,34 @@ export interface Service {
 
 export type PaymentStatus = 'Pending' | 'Completed' | 'Cancelled';
 
-export interface Payment {
-  id: string;
-  date: string;
+// Renamed from Payment to better reflect its purpose
+export interface FundRequest {
+  id: string; // Firebase key
+  uid: string;
+  userEmail: string;
+  date: string; // ISO String
   amount: number;
   currency: 'BDT' | 'USD';
   method: 'bKash' | 'Nagad' | 'Binance' | 'Bybit';
   transactionId: string;
   status: PaymentStatus;
 }
+
+// New type for orders
+export type OrderStatus = 'Pending' | 'In Progress' | 'Completed' | 'Cancelled' | 'Partial';
+
+export interface Order {
+  id: string; // Firebase key
+  uid: string;
+  serviceId: number;
+  serviceName: string;
+  link: string;
+  quantity: number;
+  charge: number;
+  createdAt: string; // ISO String
+  status: OrderStatus;
+}
+
 
 // Added for Admin Panel functionality
 export interface AppUser {
@@ -33,6 +52,7 @@ export interface AppUser {
   email: string;
   createdAt: string;
   role: 'user' | 'admin';
+  balance?: number;
 }
 
 export interface LoginRecord {

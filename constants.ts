@@ -1,5 +1,5 @@
 // Fix: Import types from './types'
-import { Category, Service, Payment } from './types';
+import { Category, Service } from './types';
 
 export const CATEGORIES: Category[] = [
   { name: 'TikTok - Views [Refill Button Working] NEW' },
@@ -222,14 +222,4 @@ export const SERVICES: Service[] = [
     max: 100000,
     category: 'TikTok - Shares',
   },
-];
-
-// Fix: Add INITIAL_PAYMENT_HISTORY constant which was previously in types.ts
-export const INITIAL_PAYMENT_HISTORY: Payment[] = [
-    { id: 'pay_1', date: '2024-07-28 10:30 AM', amount: 500, currency: 'BDT', method: 'bKash', transactionId: '9C8A7B6D5E', status: 'Completed' },
-    { id: 'pay_2', date: '2024-07-27 05:45 PM', amount: 10, currency: 'USD', method: 'Binance', transactionId: '0x123...5678', status: 'Pending' },
-    { id: 'pay_3', date: '2024-07-26 09:15 AM', amount: 1000, currency: 'BDT', method: 'Nagad', transactionId: '8F7G6H5J4K', status: 'Completed' },
-    { id: 'pay_4', date: '2024-07-25 02:00 PM', amount: 250, currency: 'BDT', method: 'bKash', transactionId: '7E6D5C4B3A', status: 'Cancelled' },
-    { id: 'pay_5', date: '2024-07-24 11:05 AM', amount: 25, currency: 'USD', method: 'Bybit', transactionId: 'bybit_user_123', status: 'Completed' },
-    { id: 'pay_6', date: '2024-07-23 08:20 PM', amount: 300, currency: 'BDT', method: 'Nagad', transactionId: '6D5C4B3A2Z', status: 'Pending' },
 ];

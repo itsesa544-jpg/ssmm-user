@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { BikashIcon, NagadIcon, BinanceIcon, BybitIcon, QrCodeIcon, CopyIcon, CheckIcon, PasteIcon } from './IconComponents';
+import { auth, database } from '../firebase';
+import { ref, set, push } from 'firebase/database';
+import { FundRequest } from '../types';
 
 type PaymentMethod = 'bKash' | 'Nagad' | 'Binance' | 'Bybit';
 
@@ -41,8 +44,64 @@ const PaymentCard: React.FC<PaymentCardProps> = ({ method, icon, account, name, 
 };
 
 const AddFunds: React.FC = () => {
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('bKash');
   const [amount, setAmount] = useState('');
   const [transactionId, setTransactionId] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if(!amount || !transactionId) {
+      setError('Please fill out all fields.');
+      return;
+    }
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      setError('Please enter a valid amount.');
+      return;
+    }
+
+    const user = auth.currentUser;
+    if (!user) {
+      setError('You must be logged in to add funds.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const fundRequestsRef = ref(database, 'fundRequests');
+      const newRequestRef = push(fundRequestsRef);
+
+      const newFundRequest: Omit<FundRequest, 'id'> = {
+        uid: user.uid,
+        userEmail: user.email || 'N/A',
+        date: new Date().toISOString(),
+        amount: parsedAmount,
+        currency: 'BDT',
+        method: selectedMethod,
+        transactionId: transactionId.trim(),
+        status: 'Pending',
+      };
+
+      await set(newRequestRef, newFundRequest);
+
+      setSuccess('Your payment request has been submitted successfully. It will be reviewed by an admin shortly.');
+      setAmount('');
+      setTransactionId('');
+
+    } catch (err) {
+      console.error("Fund request submission failed: ", err);
+      setError('Failed to submit request. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
 
   return (
     <div className="space-y-8">
@@ -59,7 +118,23 @@ const AddFunds: React.FC = () => {
       
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Submit Payment Details</h2>
-        <form className="space-y-6">
+        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">{error}</div>}
+        {success && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">{success}</div>}
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="paymentMethod" className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+            <select
+                id="paymentMethod"
+                value={selectedMethod}
+                onChange={(e) => setSelectedMethod(e.target.value as PaymentMethod)}
+                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block p-3"
+            >
+                <option value="bKash">bKash</option>
+                <option value="Nagad">Nagad</option>
+                <option value="Binance">Binance</option>
+                <option value="Bybit">Bybit</option>
+            </select>
+          </div>
           <div>
             <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">Amount (BDT)</label>
             <input 
@@ -90,8 +165,8 @@ const AddFunds: React.FC = () => {
              </div>
           </div>
            <div>
-            <button type="submit" className="w-full px-5 py-3 text-base font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 transition-transform transform hover:scale-105">
-                Submit Payment
+            <button type="submit" disabled={submitting} className="w-full px-5 py-3 text-base font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 transition-transform transform hover:scale-105 disabled:bg-green-400 disabled:cursor-not-allowed">
+                {submitting ? 'Submitting...' : 'Submit Payment'}
             </button>
         </div>
         </form>

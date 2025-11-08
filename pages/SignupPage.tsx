@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { UserIcon, EmailIcon, LockIcon } from '../components/IconComponents';
 import { auth, database } from '../firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
 import { ref, set } from 'firebase/database';
 
 
@@ -43,9 +43,13 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSwitchToLogin }) => {
         email: email,
         uid: user.uid,
         createdAt: new Date().toISOString(),
-        role: 'user' // Assign default role
+        role: 'user', // Assign default role
+        balance: 0, // Initialize balance
       });
-      // Auth state listener in AppContainer will handle redirect
+
+      await signOut(auth); // Sign out user immediately
+      onSwitchToLogin(); // Redirect to login page
+
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
         setError('This email address is already in use.');
