@@ -1,28 +1,61 @@
 import React, { useState } from 'react';
 import { UserIcon, EmailIcon, LockIcon } from '../components/IconComponents';
+import { auth, database } from '../firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { ref, set } from 'firebase/database';
+
 
 interface SignupPageProps {
-  onSignup: () => void;
   onSwitchToLogin: () => void;
 }
 
-const SignupPage: React.FC<SignupPageProps> = ({ onSignup, onSwitchToLogin }) => {
+const SignupPage: React.FC<SignupPageProps> = ({ onSwitchToLogin }) => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     if (password !== confirmPassword) {
-      alert("Passwords don't match.");
+      setError("Passwords don't match.");
       return;
     }
-    if (fullName && email && password) {
-      console.log('Signing up with:', { fullName, email, password });
-      onSignup(); // Simulate successful signup
-    } else {
-      alert('Please fill in all fields.');
+    if (!fullName || !email || !password) {
+      setError('Please fill in all fields.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Update Firebase auth profile with display name
+      await updateProfile(user, { displayName: fullName });
+
+      // Save user info to Realtime Database
+      await set(ref(database, 'users/' + user.uid), {
+        fullName: fullName,
+        email: email,
+        uid: user.uid,
+        createdAt: new Date().toISOString()
+      });
+      // Auth state listener in AppContainer will handle redirect
+    } catch (err: any) {
+      if (err.code === 'auth/email-already-in-use') {
+        setError('This email address is already in use.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Password should be at least 6 characters.');
+      } else {
+        setError('An error occurred during sign up. Please try again.');
+      }
+      console.error("Signup Error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,6 +78,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignup, onSwitchToLogin }) =>
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
           <div className="relative">
@@ -58,6 +92,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignup, onSwitchToLogin }) =>
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
           <div className="relative">
@@ -71,6 +106,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignup, onSwitchToLogin }) =>
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
            <div className="relative">
@@ -84,14 +120,17 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignup, onSwitchToLogin }) =>
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
+          {error && <p className="text-red-500 text-sm text-center -mt-2">{error}</p>}
           <div>
             <button
               type="submit"
-              className="w-full px-4 py-3 font-bold text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-transform transform hover:scale-105"
+              disabled={loading}
+              className="w-full px-4 py-3 font-bold text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-transform transform hover:scale-105 disabled:bg-green-400 disabled:cursor-not-allowed"
             >
-              Sign Up
+              {loading ? 'Creating Account...' : 'Sign Up'}
             </button>
           </div>
         </form>
