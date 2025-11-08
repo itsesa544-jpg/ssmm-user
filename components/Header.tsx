@@ -1,0 +1,26 @@
+import React from 'react';
+import { MenuIcon } from './IconComponents';
+
+interface HeaderProps {
+  toggleSidebar: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
+  return (
+    <header className="flex items-center justify-between px-4 sm:px-6 py-3 bg-white border-b shadow-sm">
+      <div className="flex items-center">
+        <button onClick={toggleSidebar} className="text-gray-500 focus:outline-none lg:hidden">
+          <MenuIcon className="h-6 w-6" />
+        </button>
+        <div className="relative text-lg font-semibold ml-2 text-gray-700">SMM Panel</div>
+      </div>
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 text-sm font-semibold text-green-700 bg-green-100 px-3 py-1 rounded-full">
+            <span>Balance: ৳ 125.50</span>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;
