@@ -25,3 +25,19 @@ export interface Payment {
   transactionId: string;
   status: PaymentStatus;
 }
+
+// Added for Admin Panel functionality
+export interface AppUser {
+  uid: string;
+  fullName: string;
+  email: string;
+  createdAt: string;
+  role: 'user' | 'admin';
+}
+
+export interface LoginRecord {
+  id: string;
+  uid: string;
+  email: string;
+  timestamp: number;
+}

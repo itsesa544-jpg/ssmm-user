@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { EmailIcon, LockIcon } from '../components/IconComponents';
-import { auth } from '../firebase';
+import { auth, database } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { ref, push, set, serverTimestamp } from 'firebase/database';
 
 interface LoginPageProps {
   onSwitchToSignup: () => void;
@@ -22,7 +23,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignup }) => {
     }
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      // Log login event to database
+      const user = userCredential.user;
+      const loginRef = ref(database, 'logins');
+      const newLoginRef = push(loginRef);
+      await set(newLoginRef, {
+        uid: user.uid,
+        email: user.email,
+        timestamp: serverTimestamp()
+      });
       // Auth state listener in AppContainer will handle redirect
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {

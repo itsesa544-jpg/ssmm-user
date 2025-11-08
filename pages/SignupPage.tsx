@@ -42,7 +42,8 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSwitchToLogin }) => {
         fullName: fullName,
         email: email,
         uid: user.uid,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        role: 'user' // Assign default role
       });
       // Auth state listener in AppContainer will handle redirect
     } catch (err: any) {

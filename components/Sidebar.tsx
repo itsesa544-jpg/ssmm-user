@@ -8,7 +8,9 @@ import {
   ChevronRightIcon,
   PendingIcon,
   CompletedIcon,
-  LogoutIcon
+  LogoutIcon,
+  AdminIcon,
+  UserIcon
 } from './IconComponents';
 
 interface SidebarProps {
@@ -17,6 +19,7 @@ interface SidebarProps {
   activePage: string;
   setActivePage: (page: string) => void;
   onLogout: () => void;
+  isAdmin: boolean;
 }
 
 interface NavLinkProps {
@@ -37,17 +40,35 @@ const NavLink: React.FC<NavLinkProps> = ({ icon, text, active, onClick }) => (
     </button>
 );
 
-// A smaller link for sub-menus
-const SubNavLink: React.FC<{ icon: React.ReactNode; text: string; }> = ({ icon, text }) => (
-    <a href="#" className="flex items-center py-2 px-3 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors duration-200">
+interface SubNavLinkProps {
+    icon: React.ReactNode;
+    text: string;
+    active?: boolean;
+    onClick: () => void;
+}
+  
+const SubNavLink: React.FC<SubNavLinkProps> = ({ icon, text, active, onClick }) => (
+    <button onClick={onClick} className={`w-full text-left flex items-center py-2 px-3 rounded-lg transition-colors duration-200 ${
+        active
+        ? 'bg-green-100 text-green-800'
+        : 'text-gray-600 hover:bg-gray-200 hover:text-gray-800'
+    }`}>
         {icon}
         <span className="mx-3 font-medium text-sm">{text}</span>
-    </a>
+    </button>
 );
 
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, activePage, setActivePage, onLogout }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, activePage, setActivePage, onLogout, isAdmin }) => {
   const [isOrdersOpen, setOrdersOpen] = useState(false);
+  const [isAdminOpen, setAdminOpen] = useState(false);
+
+  const handleNavigation = (page: string) => {
+    setActivePage(page);
+    if (window.innerWidth < 1024) { // Close sidebar on mobile after navigation
+        setIsOpen(false);
+    }
+  }
 
   return (
     <>
@@ -65,10 +86,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, activePage, setAct
               icon={<AddOrderIcon className="w-6 h-6"/>} 
               text="New Order" 
               active={activePage === 'New Order'}
-              onClick={() => setActivePage('New Order')}
+              onClick={() => handleNavigation('New Order')}
             />
             
-            {/* Orders Dropdown */}
             <div className="my-1">
               <button 
                 onClick={() => setOrdersOpen(!isOrdersOpen)}
@@ -84,9 +104,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, activePage, setAct
               </button>
               {isOrdersOpen && (
                 <div id="orders-submenu" className="pl-6 mt-1 space-y-1">
-                  <SubNavLink icon={<OrdersIcon className="w-5 h-5"/>} text="All Orders" />
-                  <SubNavLink icon={<PendingIcon className="w-5 h-5"/>} text="Pending" />
-                  <SubNavLink icon={<CompletedIcon className="w-5 h-5"/>} text="Completed" />
+                  <SubNavLink icon={<OrdersIcon className="w-5 h-5"/>} text="All Orders" onClick={() => handleNavigation('All Orders')} active={activePage === 'All Orders'} />
+                  <SubNavLink icon={<PendingIcon className="w-5 h-5"/>} text="Pending" onClick={() => handleNavigation('Pending Orders')} active={activePage === 'Pending Orders'} />
+                  <SubNavLink icon={<CompletedIcon className="w-5 h-5"/>} text="Completed" onClick={() => handleNavigation('Completed Orders')} active={activePage === 'Completed Orders'} />
                 </div>
               )}
             </div>
@@ -95,15 +115,38 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, activePage, setAct
               icon={<AddFundsIcon className="w-6 h-6"/>} 
               text="Add Funds"
               active={activePage === 'Add Funds'}
-              onClick={() => setActivePage('Add Funds')}
+              onClick={() => handleNavigation('Add Funds')}
             />
 
             <NavLink 
               icon={<HistoryIcon className="w-6 h-6"/>} 
               text="Payment History"
               active={activePage === 'Payment History'}
-              onClick={() => setActivePage('Payment History')}
+              onClick={() => handleNavigation('Payment History')}
             />
+
+            {isAdmin && (
+              <div className="my-1 border-t pt-2">
+                <button 
+                  onClick={() => setAdminOpen(!isAdminOpen)}
+                  className="w-full flex items-center justify-between p-3 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors duration-200 focus:outline-none"
+                  aria-expanded={isAdminOpen}
+                  aria-controls="admin-submenu"
+                >
+                  <div className="flex items-center">
+                    <AdminIcon className="w-6 h-6"/>
+                    <span className="mx-4 font-medium">Admin</span>
+                  </div>
+                  <ChevronRightIcon className={`w-5 h-5 transition-transform duration-200 ${isAdminOpen ? 'rotate-90' : ''}`} />
+                </button>
+                {isAdminOpen && (
+                  <div id="admin-submenu" className="pl-6 mt-1 space-y-1">
+                    <SubNavLink icon={<HistoryIcon className="w-5 h-5"/>} text="Login History" onClick={() => handleNavigation('Admin: Login History')} active={activePage === 'Admin: Login History'} />
+                    <SubNavLink icon={<UserIcon className="w-5 h-5"/>} text="All Users" onClick={() => handleNavigation('Admin: All Users')} active={activePage === 'Admin: All Users'} />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <div>
             <button 
