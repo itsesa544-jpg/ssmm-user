@@ -35,6 +35,7 @@ export type OrderStatus = 'Pending' | 'In Progress' | 'Completed' | 'Cancelled' 
 export interface Order {
   id: string; // Firebase key
   uid: string;
+  userEmail: string;
   serviceId: number;
   serviceName: string;
   link: string;

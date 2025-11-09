@@ -102,6 +102,7 @@ const NewOrderForm: React.FC = () => {
       const newOrderRef = push(ordersRef);
       const newOrder: Omit<Order, 'id'> = {
         uid: user.uid,
+        userEmail: user.email || 'N/A',
         serviceId: selectedService.id,
         serviceName: selectedService.name,
         link,

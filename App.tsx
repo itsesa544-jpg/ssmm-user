@@ -5,9 +5,7 @@ import NewOrder from './components/Dashboard';
 import AddFunds from './components/AddFunds';
 import PaymentHistory from './components/PaymentHistory';
 import OrderHistory from './components/OrderHistory';
-import AdminPanel from './components/AdminPanel';
-import AllUsers from './components/AllUsers';
-import AdminFundRequests from './components/AdminFundRequests'; // Import new component
+import AdminDashboard from './components/AdminDashboard';
 import { auth, database } from './firebase';
 import { ref, onValue } from 'firebase/database';
 
@@ -35,6 +33,12 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
     return () => unsubscribe();
   }, []);
 
+  // If user wants to see the admin dashboard, render the full-page AdminLayout
+  if (activePage === 'Admin Dashboard') {
+    return <AdminDashboard onSwitchToUser={() => setActivePage('New Order')} onLogout={onLogout} />;
+  }
+
+
   const renderContent = () => {
     switch(activePage) {
       case 'New Order':
@@ -50,13 +54,21 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
       case 'Completed Orders':
         return <OrderHistory pageTitle="Completed Orders" filterStatus="Completed" />;
       
-      // Admin Pages
-      case 'Admin: Login History':
-        return isAdmin ? <AdminPanel /> : null;
-      case 'Admin: All Users':
-        return isAdmin ? <AllUsers /> : null;
-      case 'Admin: Fund Requests':
-        return isAdmin ? <AdminFundRequests /> : null;
+      // Admin Pages - This case now only serves as an access denied message for non-admins
+      // who might somehow navigate here. Admins are handled by the layout switch above.
+      case 'Admin Dashboard':
+        return (
+            <div className="text-center p-8 bg-white rounded-lg shadow-md">
+                <h2 className="text-2xl font-bold text-red-600">Access Denied</h2>
+                <p className="text-gray-600 mt-2">You do not have permission to view this page.</p>
+                <button
+                    onClick={() => setActivePage('New Order')}
+                    className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                    Go to Dashboard
+                </button>
+            </div>
+        );
       
       default:
         return <NewOrder />;

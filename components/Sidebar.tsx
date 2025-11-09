@@ -10,7 +10,6 @@ import {
   CompletedIcon,
   LogoutIcon,
   AdminIcon,
-  UserIcon
 } from './IconComponents';
 
 interface SidebarProps {
@@ -61,7 +60,6 @@ const SubNavLink: React.FC<SubNavLinkProps> = ({ icon, text, active, onClick }) 
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, activePage, setActivePage, onLogout, isAdmin }) => {
   const [isOrdersOpen, setOrdersOpen] = useState(false);
-  const [isAdminOpen, setAdminOpen] = useState(false);
 
   const handleNavigation = (page: string) => {
     setActivePage(page);
@@ -125,31 +123,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, activePage, setAct
               onClick={() => handleNavigation('Payment History')}
             />
 
-            {isAdmin && (
-              <div className="my-1 border-t pt-2">
-                <button 
-                  onClick={() => setAdminOpen(!isAdminOpen)}
-                  className="w-full flex items-center justify-between p-3 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors duration-200 focus:outline-none"
-                  aria-expanded={isAdminOpen}
-                  aria-controls="admin-submenu"
-                >
-                  <div className="flex items-center">
-                    <AdminIcon className="w-6 h-6"/>
-                    <span className="mx-4 font-medium">Admin</span>
-                  </div>
-                  <ChevronRightIcon className={`w-5 h-5 transition-transform duration-200 ${isAdminOpen ? 'rotate-90' : ''}`} />
-                </button>
-                {isAdminOpen && (
-                  <div id="admin-submenu" className="pl-6 mt-1 space-y-1">
-                    <SubNavLink icon={<AddFundsIcon className="w-5 h-5"/>} text="Fund Requests" onClick={() => handleNavigation('Admin: Fund Requests')} active={activePage === 'Admin: Fund Requests'} />
-                    <SubNavLink icon={<HistoryIcon className="w-5 h-5"/>} text="Login History" onClick={() => handleNavigation('Admin: Login History')} active={activePage === 'Admin: Login History'} />
-                    <SubNavLink icon={<UserIcon className="w-5 h-5"/>} text="All Users" onClick={() => handleNavigation('Admin: All Users')} active={activePage === 'Admin: All Users'} />
-                  </div>
-                )}
-              </div>
-            )}
           </div>
           <div>
+            <div className="border-t pt-2">
+                <NavLink 
+                  icon={<AdminIcon className="w-6 h-6"/>} 
+                  text="Admin Panel"
+                  active={activePage.startsWith('Admin')}
+                  onClick={() => handleNavigation('Admin Dashboard')}
+                />
+            </div>
+
             <button 
               onClick={onLogout} 
               className="w-full flex items-center p-3 my-1 rounded-lg transition-colors duration-200 text-left text-gray-600 hover:bg-red-100 hover:text-red-700"
