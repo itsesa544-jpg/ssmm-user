@@ -48,15 +48,22 @@ const AdminFundRequests: React.FC = () => {
         const userRef = ref(database, `users/${request.uid}`);
         
         try {
-            await runTransaction(userRef, (user) => {
+            const { committed } = await runTransaction(userRef, (user) => {
                 if (user) {
                     user.balance = (user.balance || 0) + request.amount;
+                } else {
+                    // Abort if user does not exist
+                    return;
                 }
                 return user;
             });
             
-            const requestRef = ref(database, `fundRequests/${request.id}`);
-            await update(requestRef, { status: 'Completed' });
+            if (committed) {
+                const requestRef = ref(database, `fundRequests/${request.id}`);
+                await update(requestRef, { status: 'Completed' });
+            } else {
+                 alert("Approval failed: Could not update the user's balance. The user may not exist.");
+            }
 
         } catch (error) {
             console.error("Failed to approve transaction: ", error);

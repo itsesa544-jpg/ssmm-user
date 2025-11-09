@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import AdminOverview from './AdminOverview';
 import AdminFundRequests from './AdminFundRequests';
 import AllUsers from './AllUsers';
-import AdminAllOrders from './AdminAllOrders'; // Import the new component
-import AdminPanel from './AdminPanel'; // Login history
+import AdminAllOrders from './AdminAllOrders';
+import AdminPanel from './AdminPanel';
 import { 
   HistoryIcon,
   UsersGroupIcon, 
@@ -12,20 +12,14 @@ import {
   LogoutIcon,
   ArrowLeftIcon,
   ShoppingCartIcon,
-  ChevronRightIcon // Import Chevron icon for accordion
+  ChevronRightIcon,
+  MenuIcon, // Added for mobile header
+  CloseIcon, // Added for mobile sidebar
 } from './IconComponents';
-
-// --- AdminSidebar component is defined inside AdminDashboard.tsx to avoid creating new files ---
 
 type AdminPage = 'Overview' | 'All Orders' | 'Fund Requests' | 'All Users' | 'Login History';
 
-interface AdminSidebarProps {
-  activePage: string;
-  setActivePage: (page: AdminPage) => void;
-  onLogout: () => void;
-  onSwitchToUser: () => void;
-}
-
+// --- Reusable NavLink Components ---
 const NavLink: React.FC<{icon: React.ReactNode, text: string, active: boolean, onClick: () => void}> = ({ icon, text, active, onClick }) => (
     <button onClick={onClick} className={`w-full flex items-center p-3 my-1 rounded-lg transition-colors duration-200 text-left ${
         active 
@@ -48,95 +42,131 @@ const SubNavLink: React.FC<{icon: React.ReactNode, text: string, active: boolean
     </button>
 );
 
+// --- Responsive AdminHeader Component ---
+const AdminHeader: React.FC<{ toggleSidebar: () => void; pageTitle: string }> = ({ toggleSidebar, pageTitle }) => (
+  <header className="sticky top-0 bg-white border-b shadow-sm z-10 lg:hidden">
+    <div className="flex items-center justify-start px-4 sm:px-6 py-4">
+      <button onClick={toggleSidebar} className="text-gray-500 focus:outline-none">
+        <MenuIcon className="h-6 w-6" />
+      </button>
+      <h1 className="text-xl font-bold text-gray-800 ml-4">{pageTitle}</h1>
+    </div>
+  </header>
+);
 
-const AdminSidebar: React.FC<AdminSidebarProps> = ({ activePage, setActivePage, onLogout, onSwitchToUser }) => {
+// --- Responsive AdminSidebar Component ---
+interface AdminSidebarProps {
+  activePage: AdminPage;
+  setActivePage: (page: AdminPage) => void;
+  onLogout: () => void;
+  onSwitchToUser: () => void;
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+}
+
+const AdminSidebar: React.FC<AdminSidebarProps> = ({ activePage, setActivePage, onLogout, onSwitchToUser, isOpen, setIsOpen }) => {
   const [isOrdersOpen, setOrdersOpen] = useState(false);
   const [isPaymentsOpen, setPaymentsOpen] = useState(false);
   const [isUsersOpen, setUsersOpen] = useState(false);
 
-  return (
-    <div className="bg-gray-900 text-white w-64 p-4 flex flex-col h-screen fixed">
-      <h2 className="text-2xl font-bold text-white mb-6">Admin Panel</h2>
-      <nav className="flex flex-col justify-between flex-grow">
-        <div>
-          <button onClick={onSwitchToUser} className="w-full flex items-center p-3 my-1 rounded-lg transition-colors duration-200 text-left text-green-400 hover:bg-green-900">
-            <ArrowLeftIcon className="w-6 h-6"/>
-            <span className="mx-4 font-medium">Back to User Panel</span>
-          </button>
-          <div className="border-t border-gray-700 my-4"></div>
-          
-          <NavLink icon={<ListIcon className="w-6 h-6"/>} text="Overview" active={activePage === 'Overview'} onClick={() => setActivePage('Overview')} />
-          
-          {/* Orders Accordion */}
-          <div className="my-1">
-            <button onClick={() => setOrdersOpen(!isOrdersOpen)} className="w-full flex items-center justify-between p-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors duration-200 focus:outline-none">
-                <div className="flex items-center">
-                    <ShoppingCartIcon className="w-6 h-6"/>
-                    <span className="mx-4 font-medium">Orders</span>
-                </div>
-                <ChevronRightIcon className={`w-5 h-5 transition-transform duration-200 ${isOrdersOpen ? 'rotate-90' : ''}`} />
-            </button>
-            {isOrdersOpen && (
-                <div className="pl-6 mt-1 space-y-1">
-                    <SubNavLink icon={<ShoppingCartIcon className="w-5 h-5"/>} text="All Orders" active={activePage === 'All Orders'} onClick={() => setActivePage('All Orders')} />
-                </div>
-            )}
-          </div>
-          
-          {/* Payments Accordion */}
-          <div className="my-1">
-             <button onClick={() => setPaymentsOpen(!isPaymentsOpen)} className="w-full flex items-center justify-between p-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors duration-200 focus:outline-none">
-                <div className="flex items-center">
-                    <DollarIcon className="w-6 h-6"/>
-                    <span className="mx-4 font-medium">Payments</span>
-                </div>
-                <ChevronRightIcon className={`w-5 h-5 transition-transform duration-200 ${isPaymentsOpen ? 'rotate-90' : ''}`} />
-            </button>
-            {isPaymentsOpen && (
-                <div className="pl-6 mt-1 space-y-1">
-                    <SubNavLink icon={<DollarIcon className="w-5 h-5"/>} text="Fund Requests" active={activePage === 'Fund Requests'} onClick={() => setActivePage('Fund Requests')} />
-                </div>
-            )}
-          </div>
+  const handleNavigation = (page: AdminPage) => {
+    setActivePage(page);
+    if (window.innerWidth < 1024) {
+      setIsOpen(false);
+    }
+  };
 
-          {/* Users Accordion */}
-          <div className="my-1">
-            <button onClick={() => setUsersOpen(!isUsersOpen)} className="w-full flex items-center justify-between p-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors duration-200 focus:outline-none">
-                <div className="flex items-center">
-                    <UsersGroupIcon className="w-6 h-6"/>
-                    <span className="mx-4 font-medium">Users</span>
-                </div>
-                <ChevronRightIcon className={`w-5 h-5 transition-transform duration-200 ${isUsersOpen ? 'rotate-90' : ''}`} />
-            </button>
-            {isUsersOpen && (
-                <div className="pl-6 mt-1 space-y-1">
-                    <SubNavLink icon={<UsersGroupIcon className="w-5 h-5"/>} text="All Users" active={activePage === 'All Users'} onClick={() => setActivePage('All Users')} />
-                    <SubNavLink icon={<HistoryIcon className="w-5 h-5"/>} text="Login History" active={activePage === 'Login History'} onClick={() => setActivePage('Login History')} />
-                </div>
-            )}
-          </div>
-        </div>
-        <div>
-          <button onClick={onLogout} className="w-full flex items-center p-3 my-1 rounded-lg transition-colors duration-200 text-left text-gray-400 hover:bg-red-800 hover:text-white">
-            <LogoutIcon className="w-6 h-6"/>
-            <span className="mx-4 font-medium">Logout</span>
+  return (
+    <>
+      <div 
+        className={`fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+        onClick={() => setIsOpen(false)}
+      ></div>
+      <div className={`bg-gray-900 text-white w-64 p-4 flex flex-col h-screen fixed inset-y-0 left-0 transform transition-transform duration-300 ease-in-out z-30 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-white">Admin Panel</h2>
+          <button onClick={() => setIsOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
+            <CloseIcon className="w-6 h-6" />
           </button>
         </div>
-      </nav>
-    </div>
+        <nav className="flex flex-col justify-between flex-grow">
+          <div>
+            <button onClick={onSwitchToUser} className="w-full flex items-center p-3 my-1 rounded-lg transition-colors duration-200 text-left text-green-400 hover:bg-green-900">
+              <ArrowLeftIcon className="w-6 h-6"/>
+              <span className="mx-4 font-medium">Back to User Panel</span>
+            </button>
+            <div className="border-t border-gray-700 my-4"></div>
+            
+            <NavLink icon={<ListIcon className="w-6 h-6"/>} text="Overview" active={activePage === 'Overview'} onClick={() => handleNavigation('Overview')} />
+            
+            <div className="my-1">
+              <button onClick={() => setOrdersOpen(!isOrdersOpen)} className="w-full flex items-center justify-between p-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors duration-200 focus:outline-none">
+                  <div className="flex items-center">
+                      <ShoppingCartIcon className="w-6 h-6"/>
+                      <span className="mx-4 font-medium">Orders</span>
+                  </div>
+                  <ChevronRightIcon className={`w-5 h-5 transition-transform duration-200 ${isOrdersOpen ? 'rotate-90' : ''}`} />
+              </button>
+              {isOrdersOpen && (
+                  <div className="pl-6 mt-1 space-y-1">
+                      <SubNavLink icon={<ShoppingCartIcon className="w-5 h-5"/>} text="All Orders" active={activePage === 'All Orders'} onClick={() => handleNavigation('All Orders')} />
+                  </div>
+              )}
+            </div>
+            
+            <div className="my-1">
+               <button onClick={() => setPaymentsOpen(!isPaymentsOpen)} className="w-full flex items-center justify-between p-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors duration-200 focus:outline-none">
+                  <div className="flex items-center">
+                      <DollarIcon className="w-6 h-6"/>
+                      <span className="mx-4 font-medium">Payments</span>
+                  </div>
+                  <ChevronRightIcon className={`w-5 h-5 transition-transform duration-200 ${isPaymentsOpen ? 'rotate-90' : ''}`} />
+              </button>
+              {isPaymentsOpen && (
+                  <div className="pl-6 mt-1 space-y-1">
+                      <SubNavLink icon={<DollarIcon className="w-5 h-5"/>} text="Fund Requests" active={activePage === 'Fund Requests'} onClick={() => handleNavigation('Fund Requests')} />
+                  </div>
+              )}
+            </div>
+
+            <div className="my-1">
+              <button onClick={() => setUsersOpen(!isUsersOpen)} className="w-full flex items-center justify-between p-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors duration-200 focus:outline-none">
+                  <div className="flex items-center">
+                      <UsersGroupIcon className="w-6 h-6"/>
+                      <span className="mx-4 font-medium">Users</span>
+                  </div>
+                  <ChevronRightIcon className={`w-5 h-5 transition-transform duration-200 ${isUsersOpen ? 'rotate-90' : ''}`} />
+              </button>
+              {isUsersOpen && (
+                  <div className="pl-6 mt-1 space-y-1">
+                      <SubNavLink icon={<UsersGroupIcon className="w-5 h-5"/>} text="All Users" active={activePage === 'All Users'} onClick={() => handleNavigation('All Users')} />
+                      <SubNavLink icon={<HistoryIcon className="w-5 h-5"/>} text="Login History" active={activePage === 'Login History'} onClick={() => handleNavigation('Login History')} />
+                  </div>
+              )}
+            </div>
+          </div>
+          <div>
+            <button onClick={onLogout} className="w-full flex items-center p-3 my-1 rounded-lg transition-colors duration-200 text-left text-gray-400 hover:bg-red-800 hover:text-white">
+              <LogoutIcon className="w-6 h-6"/>
+              <span className="mx-4 font-medium">Logout</span>
+            </button>
+          </div>
+        </nav>
+      </div>
+    </>
   );
 };
-// --- End of embedded AdminSidebar component ---
 
 
+// --- Main AdminLayout Component ---
 interface AdminLayoutProps {
   onLogout: () => void;
   onSwitchToUser: () => void;
 }
 
-// The file is AdminDashboard.tsx but it now acts as a full-page layout
 const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout, onSwitchToUser }) => {
   const [activePage, setActivePage] = useState<AdminPage>('Overview');
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   const renderContent = () => {
     switch (activePage) {
@@ -150,16 +180,19 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout, onSwitchToUser }) =
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100">
       <AdminSidebar 
         activePage={activePage} 
         setActivePage={setActivePage} 
         onLogout={onLogout}
         onSwitchToUser={onSwitchToUser}
+        isOpen={isSidebarOpen}
+        setIsOpen={setSidebarOpen}
       />
-      <div className="flex-1 ml-64">
+      <div className="flex flex-col flex-1 lg:ml-64">
+        <AdminHeader toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} pageTitle={activePage} />
         <main className="p-4 sm:p-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-6">{activePage}</h1>
+          <h1 className="hidden lg:block text-3xl font-bold text-gray-800 mb-6">{activePage}</h1>
           {renderContent()}
         </main>
       </div>
