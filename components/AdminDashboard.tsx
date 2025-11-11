@@ -4,6 +4,7 @@ import AdminFundRequests from './AdminFundRequests';
 import AllUsers from './AllUsers';
 import AdminAllOrders from './AdminAllOrders';
 import AdminPanel from './AdminPanel';
+import AdminPaymentSettings from './AdminPaymentSettings'; // New import
 import { 
   HistoryIcon,
   UsersGroupIcon, 
@@ -13,8 +14,9 @@ import {
   ArrowLeftIcon,
   ShoppingCartIcon,
   ChevronRightIcon,
-  MenuIcon, // Added for mobile header
-  CloseIcon, // Added for mobile sidebar
+  MenuIcon, 
+  CloseIcon,
+  SettingsIcon, // New import
 } from './IconComponents';
 
 // --- Footer Component ---
@@ -28,7 +30,7 @@ const Footer: React.FC = () => {
   );
 };
 
-type AdminPage = 'Overview' | 'All Orders' | 'Fund Requests' | 'All Users' | 'Login History';
+type AdminPage = 'Overview' | 'All Orders' | 'Fund Requests' | 'All Users' | 'Login History' | 'Payment Settings';
 
 // --- Reusable NavLink Components ---
 const NavLink: React.FC<{icon: React.ReactNode, text: string, active: boolean, onClick: () => void}> = ({ icon, text, active, onClick }) => (
@@ -136,6 +138,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activePage, setActivePage, 
               {isPaymentsOpen && (
                   <div className="pl-6 mt-1 space-y-1">
                       <SubNavLink icon={<DollarIcon className="w-5 h-5"/>} text="Fund Requests" active={activePage === 'Fund Requests'} onClick={() => handleNavigation('Fund Requests')} />
+                      <SubNavLink icon={<SettingsIcon className="w-5 h-5"/>} text="Payment Settings" active={activePage === 'Payment Settings'} onClick={() => handleNavigation('Payment Settings')} />
                   </div>
               )}
             </div>
@@ -186,6 +189,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout, onSwitchToUser }) =
       case 'Fund Requests': return <AdminFundRequests />;
       case 'All Users': return <AllUsers />;
       case 'Login History': return <AdminPanel />;
+      case 'Payment Settings': return <AdminPaymentSettings />;
       default: return <AdminOverview />;
     }
   };

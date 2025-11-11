@@ -24,7 +24,7 @@ export interface FundRequest {
   date: string; // ISO String
   amount: number;
   currency: 'BDT' | 'USD';
-  method: 'bKash' | 'Nagad' | 'Binance' | 'Bybit';
+  method: string; // Now a string to accommodate dynamic methods
   transactionId: string;
   status: PaymentStatus;
 }
@@ -54,6 +54,7 @@ export interface AppUser {
   createdAt: string;
   role: 'user' | 'admin';
   balance?: number;
+  referredBy?: string;
 }
 
 export interface LoginRecord {
@@ -61,4 +62,18 @@ export interface LoginRecord {
   uid: string;
   email: string;
   timestamp: number;
+}
+
+// New interface for dynamic payment methods
+export interface PaymentMethodDetails {
+  id: string; // Firebase key e.g., 'bkash'
+  name: string; // e.g., 'bKash'
+  account: string;
+  accountName: string;
+  type: string; // 'Personal', 'TRC20 Address'
+  note?: string;
+  logoUrl?: string; // URL for a custom logo image
+  qrCodeUrl?: string;
+  category: 'local' | 'crypto';
+  enabled: boolean;
 }

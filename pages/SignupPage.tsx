@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserIcon, EmailIcon, LockIcon } from '../components/IconComponents';
 import { auth, database } from '../firebase';
 import { createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
 import { ref, set } from 'firebase/database';
+import { AppUser } from '../types';
 
 
 interface SignupPageProps {
@@ -16,6 +17,15 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSwitchToLogin }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [referrerId, setReferrerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const refId = params.get('ref');
+    if (refId) {
+      setReferrerId(refId);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,15 +47,23 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSwitchToLogin }) => {
       // Update Firebase auth profile with display name
       await updateProfile(user, { displayName: fullName });
 
-      // Save user info to Realtime Database
-      await set(ref(database, 'users/' + user.uid), {
+      // Prepare user data
+      const userData: Omit<AppUser, 'balance'> & { balance: number; referredBy?: string } = {
         fullName: fullName,
         email: email,
         uid: user.uid,
         createdAt: new Date().toISOString(),
         role: 'user', // Assign default role
         balance: 0, // Initialize balance
-      });
+      };
+
+      // Add referrer ID if it exists
+      if (referrerId) {
+        userData.referredBy = referrerId;
+      }
+      
+      // Save user info to Realtime Database
+      await set(ref(database, 'users/' + user.uid), userData);
 
       await signOut(auth); // Sign out user immediately
       onSwitchToLogin(); // Redirect to login page

@@ -22,6 +22,18 @@ const AppContainer: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  // Handle referral links on initial load
+  useEffect(() => {
+    // This effect should only run if the user is not logged in.
+    if (!user && !loading) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('ref')) {
+        setIsLoginView(false); // Switch to signup view
+        setSignupSuccess(false); // Ensure no success message is shown
+      }
+    }
+  }, [user, loading]);
+
   const handleLogout = () => {
     signOut(auth).catch(error => console.error("Logout failed", error));
   };

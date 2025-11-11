@@ -9,6 +9,7 @@ import AdminDashboard from './components/AdminDashboard';
 import { auth, database } from './firebase';
 import { ref, onValue } from 'firebase/database';
 import UserStats from './components/UserStats';
+import ShareSystem from './components/ShareSystem';
 import { WhatsAppIcon, CopyIcon, CheckIcon } from './components/IconComponents';
 
 // --- Footer Component ---
@@ -107,6 +108,7 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
             <WhatsAppContact />
             <UserStats />
             <NewOrder />
+            <ShareSystem />
           </div>
         );
       case 'Add Funds':
@@ -142,6 +144,7 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
             <WhatsAppContact />
             <UserStats />
             <NewOrder />
+            <ShareSystem />
           </div>
         );
     }
