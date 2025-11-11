@@ -78,36 +78,31 @@ interface AppProps {
 const App: React.FC<AppProps> = ({ onLogout }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [activePage, setActivePage] = useState('New Order');
-  const [isAdmin, setIsAdmin] = useState(false);
   const [balance, setBalance] = useState(0);
 
+  const user = auth.currentUser;
+  const isSuperAdmin = user?.email === 'mdesaalli74@gmail.com';
+
   useEffect(() => {
-    const user = auth.currentUser;
     if (!user) return;
 
     const userRef = ref(database, `users/${user.uid}`);
     const unsubscribe = onValue(userRef, (snapshot) => {
       const data = snapshot.val();
-      setIsAdmin(data?.role === 'admin');
       setBalance(data?.balance || 0);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
-  const user = auth.currentUser;
-  const isSpecialAdmin = isAdmin && user && user.email === 'mdesaalli74@gmail.com';
-
-  // If user is the special admin, force the admin dashboard.
-  // Also, if any admin navigates to the admin dashboard, render it.
-  if (isSpecialAdmin || activePage === 'Admin Dashboard') {
+  // If user is the super admin, they only see the admin dashboard.
+  if (isSuperAdmin) {
     return <AdminDashboard 
-              onSwitchToUser={() => setActivePage('New Order')} 
+              onSwitchToUser={() => {}} // This is hidden by forceAdminView, but provide a dummy function
               onLogout={onLogout} 
-              forceAdminView={isSpecialAdmin} 
+              forceAdminView={true} 
            />;
   }
-
 
   const renderContent = () => {
     switch(activePage) {
@@ -133,22 +128,6 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
       case 'My Account':
         return <ProfilePage />;
       
-      // Admin Pages - This case now only serves as an access denied message for non-admins
-      // who might somehow navigate here. Admins are handled by the layout switch above.
-      case 'Admin Dashboard':
-        return (
-            <div className="text-center p-8 bg-white rounded-lg shadow-md">
-                <h2 className="text-2xl font-bold text-red-600">Access Denied</h2>
-                <p className="text-gray-600 mt-2">You do not have permission to view this page.</p>
-                <button
-                    onClick={() => setActivePage('New Order')}
-                    className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                    Go to Dashboard
-                </button>
-            </div>
-        );
-      
       default:
         return (
           <div className="space-y-6">
@@ -169,7 +148,7 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
         activePage={activePage}
         setActivePage={setActivePage}
         onLogout={onLogout}
-        isAdmin={isAdmin}
+        isAdmin={isSuperAdmin} // Will be false for all regular users
       />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} balance={balance} />

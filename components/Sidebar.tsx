@@ -132,15 +132,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, activePage, setAct
               active={activePage === 'My Account'}
               onClick={() => handleNavigation('My Account')}
             />
-
-            <div className="border-t pt-2">
-                <NavLink 
-                  icon={<AdminIcon className="w-6 h-6"/>} 
-                  text="Admin Panel"
-                  active={activePage.startsWith('Admin')}
-                  onClick={() => handleNavigation('Admin Dashboard')}
-                />
-            </div>
+            
+            {isAdmin && (
+              <div className="border-t pt-2">
+                  <NavLink 
+                    icon={<AdminIcon className="w-6 h-6"/>} 
+                    text="Admin Panel"
+                    active={activePage.startsWith('Admin')}
+                    onClick={() => handleNavigation('Admin Dashboard')}
+                  />
+              </div>
+            )}
 
             <button 
               onClick={onLogout} 
