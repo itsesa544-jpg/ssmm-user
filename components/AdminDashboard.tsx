@@ -75,9 +75,10 @@ interface AdminSidebarProps {
   onSwitchToUser: () => void;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  forceAdminView: boolean;
 }
 
-const AdminSidebar: React.FC<AdminSidebarProps> = ({ activePage, setActivePage, onLogout, onSwitchToUser, isOpen, setIsOpen }) => {
+const AdminSidebar: React.FC<AdminSidebarProps> = ({ activePage, setActivePage, onLogout, onSwitchToUser, isOpen, setIsOpen, forceAdminView }) => {
   const [isOrdersOpen, setOrdersOpen] = useState(false);
   const [isPaymentsOpen, setPaymentsOpen] = useState(false);
   const [isUsersOpen, setUsersOpen] = useState(false);
@@ -104,11 +105,15 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activePage, setActivePage, 
         </div>
         <nav className="flex flex-col justify-between flex-grow">
           <div>
-            <button onClick={onSwitchToUser} className="w-full flex items-center p-3 my-1 rounded-lg transition-colors duration-200 text-left text-green-400 hover:bg-green-900">
-              <ArrowLeftIcon className="w-6 h-6"/>
-              <span className="mx-4 font-medium">Back to User Panel</span>
-            </button>
-            <div className="border-t border-gray-700 my-4"></div>
+            {!forceAdminView && (
+              <>
+                <button onClick={onSwitchToUser} className="w-full flex items-center p-3 my-1 rounded-lg transition-colors duration-200 text-left text-green-400 hover:bg-green-900">
+                  <ArrowLeftIcon className="w-6 h-6"/>
+                  <span className="mx-4 font-medium">Back to User Panel</span>
+                </button>
+                <div className="border-t border-gray-700 my-4"></div>
+              </>
+            )}
             
             <NavLink icon={<ListIcon className="w-6 h-6"/>} text="Overview" active={activePage === 'Overview'} onClick={() => handleNavigation('Overview')} />
             
@@ -176,9 +181,10 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activePage, setActivePage, 
 interface AdminLayoutProps {
   onLogout: () => void;
   onSwitchToUser: () => void;
+  forceAdminView?: boolean;
 }
 
-const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout, onSwitchToUser }) => {
+const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout, onSwitchToUser, forceAdminView = false }) => {
   const [activePage, setActivePage] = useState<AdminPage>('Overview');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
@@ -203,6 +209,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout, onSwitchToUser }) =
         onSwitchToUser={onSwitchToUser}
         isOpen={isSidebarOpen}
         setIsOpen={setSidebarOpen}
+        forceAdminView={forceAdminView}
       />
       <div className="flex flex-col min-h-screen lg:ml-64">
         <AdminHeader toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} pageTitle={activePage} />

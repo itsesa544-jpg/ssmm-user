@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { auth } from '../firebase';
-import { CopyIcon, CheckIcon, FacebookIcon, WhatsAppIcon, TelegramIcon, ShareIcon } from './IconComponents';
+import { CopyIcon, CheckIcon, FacebookIcon, WhatsAppIcon, TelegramIcon, ShareIcon, GiftIcon } from './IconComponents';
 
 const ShareSystem: React.FC = () => {
   const [referralLink, setReferralLink] = useState('');
@@ -107,6 +107,13 @@ const ShareSystem: React.FC = () => {
           </a>
         </div>
       )}
+
+      <div className="mt-6 p-4 bg-green-50 border-2 border-dashed border-green-400 rounded-lg text-center flex flex-col items-center gap-2">
+          <GiftIcon className="w-8 h-8 text-green-600" />
+          <p className="text-green-800 font-medium text-sm">
+              আপনার বন্ধুকে আপনার ব্যক্তিগত শেয়ার লিংক/কোড দিয়ে রেজিস্টার করান; রেজিস্ট্রেশন সফল হলে আপনাকে ৳২ এবং রেফার করা বন্ধুকে ৳2 হবে — তৎক্ষণাত ওয়ালেটে যোগ হবে।
+          </p>
+      </div>
     </div>
   );
 };

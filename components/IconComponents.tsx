@@ -245,6 +245,17 @@ export const PasteIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
+// New Gift Icon for referral bonus
+export const GiftIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg {...props} stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+        <polyline points="20 12 20 22 4 22 4 12"></polyline>
+        <rect x="2" y="7" width="20" height="5"></rect>
+        <line x1="12" y1="22" x2="12" y2="7"></line>
+        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C9.81 2 12 4.19 12 7z"></path>
+        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C14.19 2 12 4.19 12 7z"></path>
+    </svg>
+);
+
 // New Share Icon
 export const ShareIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg {...props} stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">

@@ -10,6 +10,7 @@ import { auth, database } from './firebase';
 import { ref, onValue } from 'firebase/database';
 import UserStats from './components/UserStats';
 import ShareSystem from './components/ShareSystem';
+import ProfilePage from './components/ProfilePage'; // Added for My Account page
 import { WhatsAppIcon, CopyIcon, CheckIcon } from './components/IconComponents';
 
 // --- Footer Component ---
@@ -94,9 +95,17 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
     return () => unsubscribe();
   }, []);
 
-  // If user wants to see the admin dashboard, render the full-page AdminLayout
-  if (activePage === 'Admin Dashboard') {
-    return <AdminDashboard onSwitchToUser={() => setActivePage('New Order')} onLogout={onLogout} />;
+  const user = auth.currentUser;
+  const isSpecialAdmin = isAdmin && user && user.email === 'mdesaalli74@gmail.com';
+
+  // If user is the special admin, force the admin dashboard.
+  // Also, if any admin navigates to the admin dashboard, render it.
+  if (isSpecialAdmin || activePage === 'Admin Dashboard') {
+    return <AdminDashboard 
+              onSwitchToUser={() => setActivePage('New Order')} 
+              onLogout={onLogout} 
+              forceAdminView={isSpecialAdmin} 
+           />;
   }
 
 
@@ -121,6 +130,8 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
         return <OrderHistory pageTitle="Pending Orders" filterStatus="Pending" />;
       case 'Completed Orders':
         return <OrderHistory pageTitle="Completed Orders" filterStatus="Completed" />;
+      case 'My Account':
+        return <ProfilePage />;
       
       // Admin Pages - This case now only serves as an access denied message for non-admins
       // who might somehow navigate here. Admins are handled by the layout switch above.
