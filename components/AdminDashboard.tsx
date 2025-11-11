@@ -17,6 +17,17 @@ import {
   CloseIcon, // Added for mobile sidebar
 } from './IconComponents';
 
+// --- Footer Component ---
+const Footer: React.FC = () => {
+  return (
+    <footer className="bg-white text-center py-3 border-t text-sm text-gray-500">
+      <p>
+        &copy; {new Date().getFullYear()} Share It System. All Rights Reserved.
+      </p>
+    </footer>
+  );
+};
+
 type AdminPage = 'Overview' | 'All Orders' | 'Fund Requests' | 'All Users' | 'Login History';
 
 // --- Reusable NavLink Components ---
@@ -180,7 +191,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout, onSwitchToUser }) =
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="bg-gray-100">
       <AdminSidebar 
         activePage={activePage} 
         setActivePage={setActivePage} 
@@ -189,12 +200,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout, onSwitchToUser }) =
         isOpen={isSidebarOpen}
         setIsOpen={setSidebarOpen}
       />
-      <div className="flex flex-col flex-1 lg:ml-64">
+      <div className="flex flex-col min-h-screen lg:ml-64">
         <AdminHeader toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} pageTitle={activePage} />
-        <main className="p-4 sm:p-6">
+        <main className="flex-grow p-4 sm:p-6">
           <h1 className="hidden lg:block text-3xl font-bold text-gray-800 mb-6">{activePage}</h1>
           {renderContent()}
         </main>
+        <Footer />
       </div>
     </div>
   );
