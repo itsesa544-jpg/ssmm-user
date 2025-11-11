@@ -100,7 +100,9 @@ const NewOrderForm: React.FC = () => {
 
       const ordersRef = ref(database, 'orders');
       const newOrderRef = push(ordersRef);
+      const displayId = Math.floor(100000 + Math.random() * 900000).toString();
       const newOrder: Omit<Order, 'id'> = {
+        displayId,
         uid: user.uid,
         userEmail: user.email || 'N/A',
         serviceId: selectedService.id,
@@ -113,7 +115,7 @@ const NewOrderForm: React.FC = () => {
       };
       await set(newOrderRef, newOrder);
 
-      setSuccess(`Order placed successfully! Charge: ৳${charge.toFixed(4)}`);
+      setSuccess(`Order placed successfully! Order ID: ${displayId}. Charge: ৳${charge.toFixed(4)}`);
       // Reset form
       setSelectedCategory(CATEGORIES[0]?.name || '');
       setLink('');

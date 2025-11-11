@@ -21,6 +21,8 @@ const AdminAllOrders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     const ordersRef = ref(database, 'orders');
@@ -43,6 +45,18 @@ const AdminAllOrders: React.FC = () => {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredOrders(orders);
+    } else {
+      setFilteredOrders(
+        orders.filter(order =>
+          order.displayId?.includes(searchQuery.trim())
+        )
+      );
+    }
+  }, [searchQuery, orders]);
   
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     setUpdatingId(orderId);
@@ -68,12 +82,22 @@ const AdminAllOrders: React.FC = () => {
 
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search by Order ID..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full max-w-sm p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+      </div>
       <div className="overflow-x-auto">
         <div className="min-w-full inline-block align-middle">
           <div className="overflow-hidden border border-gray-200 rounded-lg">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Link</th>
@@ -84,9 +108,10 @@ const AdminAllOrders: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                 {orders.length > 0 ? (
-                  orders.map(order => (
+                 {filteredOrders.length > 0 ? (
+                  filteredOrders.map(order => (
                     <tr key={order.id} className={`${updatingId === order.id ? 'opacity-50' : ''} hover:bg-gray-50`}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700">{order.displayId || 'N/A'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{order.userEmail}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{order.serviceName}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs"><a href={order.link} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">{order.link}</a></td>
@@ -111,8 +136,8 @@ const AdminAllOrders: React.FC = () => {
                   ))
                  ) : (
                   <tr>
-                    <td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-500">
-                      No orders found on the platform.
+                    <td colSpan={8} className="px-6 py-10 text-center text-sm text-gray-500">
+                      No orders found.
                     </td>
                   </tr>
                  )}

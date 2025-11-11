@@ -77,6 +77,7 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ filterStatus = 'All', pageT
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Link</th>
@@ -89,6 +90,7 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ filterStatus = 'All', pageT
                  {orders.length > 0 ? (
                   orders.map(order => (
                     <tr key={order.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700">{order.displayId || 'N/A'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(order.createdAt).toLocaleString()}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{order.serviceName}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs"><a href={order.link} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">{order.link}</a></td>
@@ -101,7 +103,7 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ filterStatus = 'All', pageT
                   ))
                  ) : (
                   <tr>
-                    <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-500">
+                    <td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-500">
                       You have no orders here.
                     </td>
                   </tr>

@@ -144,6 +144,7 @@ const AdminOverview: React.FC = () => {
                     <table className="w-full text-sm text-left text-gray-500">
                         <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                             <tr>
+                                <th scope="col" className="px-4 py-3">Order ID</th>
                                 <th scope="col" className="px-4 py-3">User</th>
                                 <th scope="col" className="px-4 py-3">Charge</th>
                                 <th scope="col" className="px-4 py-3">Status</th>
@@ -151,15 +152,16 @@ const AdminOverview: React.FC = () => {
                         </thead>
                         <tbody>
                             {loading ? Array.from({length: 5}).map((_, i) => (
-                                <tr key={i} className="border-b"><td colSpan={3} className="px-4 py-4"><div className="h-5 bg-gray-200 rounded animate-pulse"></div></td></tr>
+                                <tr key={i} className="border-b"><td colSpan={4} className="px-4 py-4"><div className="h-5 bg-gray-200 rounded animate-pulse"></div></td></tr>
                             )) : recentOrders.length > 0 ? recentOrders.map(order => (
                                 <tr key={order.id} className="bg-white border-b hover:bg-gray-50">
+                                    <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap font-mono">{order.displayId || 'N/A'}</td>
                                     <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{order.userEmail}</td>
                                     <td className="px-4 py-3">৳{order.charge.toFixed(2)}</td>
                                     <td className="px-4 py-3"><OrderStatusBadge status={order.status} /></td>
                                 </tr>
                             )) : (
-                                <tr><td colSpan={3} className="text-center py-4">No recent orders.</td></tr>
+                                <tr><td colSpan={4} className="text-center py-4">No recent orders.</td></tr>
                             )}
                         </tbody>
                     </table>
