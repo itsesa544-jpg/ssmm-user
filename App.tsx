@@ -8,6 +8,7 @@ import OrderHistory from './components/OrderHistory';
 import AdminDashboard from './components/AdminDashboard';
 import { auth, database } from './firebase';
 import { ref, onValue } from 'firebase/database';
+import UserStats from './components/UserStats';
 
 interface AppProps {
   onLogout: () => void;
@@ -42,7 +43,12 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
   const renderContent = () => {
     switch(activePage) {
       case 'New Order':
-        return <NewOrder />;
+        return (
+          <div className="space-y-6">
+            <UserStats />
+            <NewOrder />
+          </div>
+        );
       case 'Add Funds':
         return <AddFunds />;
       case 'Payment History':
@@ -71,7 +77,12 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
         );
       
       default:
-        return <NewOrder />;
+        return (
+          <div className="space-y-6">
+            <UserStats />
+            <NewOrder />
+          </div>
+        );
     }
   };
 
