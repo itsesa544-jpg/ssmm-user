@@ -44,6 +44,7 @@ export interface Order {
   charge: number;
   createdAt: string; // ISO String
   status: OrderStatus;
+  providerOrderId?: number;
 }
 
 

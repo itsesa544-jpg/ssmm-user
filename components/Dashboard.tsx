@@ -3,7 +3,11 @@ import { CATEGORIES, SERVICES } from '../constants';
 import { Service, Order } from '../types';
 import { ChevronDownIcon } from './IconComponents';
 import { auth, database } from '../firebase';
-import { ref, set, push, runTransaction, get } from 'firebase/database';
+import { ref, set, push, runTransaction } from 'firebase/database';
+
+// SMM Provider API configuration
+const SMM_API_URL = 'https://www.smmservices24.com/api/v2';
+const SMM_API_KEY = 'd989ae35dd4993a5ea53764dc8081470a31aaac1';
 
 const NewOrderForm: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]?.name || '');
@@ -72,32 +76,54 @@ const NewOrderForm: React.FC = () => {
     }
     
     setSubmitting(true);
-
     const userRef = ref(database, `users/${user.uid}`);
-    
-    try {
-      const snapshot = await get(userRef);
-      if (!snapshot.exists() || snapshot.val().balance < charge) {
-        setError('Your balance is too low to place this order.');
-        setSubmitting(false);
-        return;
-      }
+    let chargeDeducted = false;
 
-      const { committed, snapshot: finalSnapshot } = await runTransaction(userRef, (userData) => {
+    try {
+      // Step 1: Deduct balance from user's account
+      const transactionResult = await runTransaction(userRef, (userData) => {
         if (userData) {
-          if (userData.balance >= charge) {
+          if ((userData.balance || 0) >= charge) {
             userData.balance -= charge;
           } else {
-            return; // Abort transaction
+            return; // Abort transaction if balance is insufficient
           }
         }
         return userData;
       });
 
-      if (!committed) {
-        throw new Error('Failed to update balance. Please try again.');
+      if (!transactionResult.committed) {
+        setError('Your balance is too low to place this order.');
+        setSubmitting(false);
+        return;
+      }
+      chargeDeducted = true;
+
+      // Step 2: Place order with SMM provider
+      const apiParams = new URLSearchParams({
+        key: SMM_API_KEY,
+        action: 'add',
+        service: selectedService.id.toString(),
+        url: link,
+        quantity: quantity.toString(),
+      });
+
+      const response = await fetch(SMM_API_URL, {
+        method: 'POST',
+        body: apiParams,
+      });
+
+      const apiResult = await response.json();
+
+      if (apiResult.error) {
+        throw new Error(`Provider error: ${apiResult.error}`);
       }
 
+      if (!apiResult.order) {
+        throw new Error('SMM provider returned an invalid response.');
+      }
+
+      // Step 3: API call successful, save order to our database
       const ordersRef = ref(database, 'orders');
       const newOrderRef = push(ordersRef);
       const displayId = Math.floor(100000 + Math.random() * 900000).toString();
@@ -112,17 +138,30 @@ const NewOrderForm: React.FC = () => {
         charge,
         createdAt: new Date().toISOString(),
         status: 'Pending',
+        providerOrderId: apiResult.order, // Save provider order ID
       };
       await set(newOrderRef, newOrder);
 
-      setSuccess(`Order placed successfully! Order ID: ${displayId}. Charge: ৳${charge.toFixed(4)}`);
+      setSuccess(`Order placed successfully! Order ID: ${displayId}.`);
       // Reset form
       setSelectedCategory(CATEGORIES[0]?.name || '');
       setLink('');
 
     } catch (err: any) {
       console.error("Order submission failed: ", err);
-      setError('Failed to place order. Please try again or check your balance.');
+      let errorMessage = err.message || 'Failed to place order. Please try again.';
+
+      // If charge was deducted but something failed afterwards, refund the user
+      if (chargeDeducted) {
+        await runTransaction(userRef, (userData) => {
+          if (userData) {
+            userData.balance = (userData.balance || 0) + charge;
+          }
+          return userData;
+        });
+        errorMessage += ' Your account has been refunded.';
+      }
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
