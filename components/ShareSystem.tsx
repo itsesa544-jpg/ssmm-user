@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { auth, database } from '../firebase';
-import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
+import { auth } from '../firebase';
 import { CopyIcon, CheckIcon, FacebookIcon, WhatsAppIcon, TelegramIcon, ShareIcon, GiftIcon } from './IconComponents';
-import { AppUser } from '../types';
 
 const ShareSystem: React.FC = () => {
   const [referralLink, setReferralLink] = useState('');
   const [copied, setCopied] = useState(false);
   const [canShare, setCanShare] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [referredUsers, setReferredUsers] = useState<AppUser[]>([]);
-  const [loadingReferrals, setLoadingReferrals] = useState(true);
 
   useEffect(() => {
     // Check for Web Share API support on component mount
@@ -22,24 +17,9 @@ const ShareSystem: React.FC = () => {
   useEffect(() => {
     const user = auth.currentUser;
     if (user) {
-      setUserName(user.displayName || 'User');
       // Construct the base URL from the current window location
       const baseUrl = `${window.location.protocol}//${window.location.host}`;
       setReferralLink(`${baseUrl}/?ref=${user.uid}`);
-
-      // Fetch referred users
-      const referralsQuery = query(ref(database, 'users'), orderByChild('referredBy'), equalTo(user.uid));
-      const unsubscribe = onValue(referralsQuery, (snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          const usersList: AppUser[] = Object.values(data);
-          setReferredUsers(usersList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-        } else {
-          setReferredUsers([]);
-        }
-        setLoadingReferrals(false);
-      });
-      return () => unsubscribe();
     }
   }, []);
 
@@ -74,7 +54,7 @@ const ShareSystem: React.FC = () => {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mt-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Share & Earn, {userName}!</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Share & Earn</h2>
       <p className="text-gray-600 mb-4">
         Share your referral link with friends. When they sign up and add funds, you'll receive a bonus!
       </p>
@@ -133,51 +113,6 @@ const ShareSystem: React.FC = () => {
           <p className="text-green-800 font-medium text-sm">
               আপনার বন্ধুকে আপনার ব্যক্তিগত শেয়ার লিংক/কোড দিয়ে রেজিস্টার করান; রেজিস্ট্রেশন সফল হলে আপনাকে ৳২ এবং রেফার করা বন্ধুকে ৳2 হবে — তৎক্ষণাত ওয়ালেটে যোগ হবে।
           </p>
-      </div>
-
-      {/* New referrals table section */}
-      <div className="mt-8">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">My Referrals</h3>
-        <div className="overflow-x-auto">
-          <div className="min-w-full inline-block align-middle">
-            <div className="overflow-hidden border border-gray-200 rounded-lg">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined On</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bonus Earned</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {loadingReferrals ? (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
-                        Loading referrals...
-                      </td>
-                    </tr>
-                  ) : referredUsers.length > 0 ? (
-                    referredUsers.map((user) => (
-                      <tr key={user.uid} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{user.fullName}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(user.createdAt).toLocaleDateString()}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-700">৳2.00</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
-                        You have not referred anyone yet.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
